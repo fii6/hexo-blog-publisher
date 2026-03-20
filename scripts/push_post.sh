@@ -23,10 +23,8 @@ if [[ -f "$ENV_FILE" ]]; then
   set +a
 fi
 
-BLOG_REPO_PATH="$(expand_path "${BLOG_REPO_PATH:-$HOME/blog}")"
+BLOG_REPO_PATH="$(expand_path "${BLOG_REPO_PATH:-$HOME/project/blog}")"
 POSTS_SUBDIR="${POSTS_SUBDIR:-source/_posts}"
-EXPORT_DIR="$(expand_path "${EXPORT_DIR:-$HOME/.openclaw/workspace/exports}")"
-TRASH_EXPORT_DIR="$(expand_path "${TRASH_EXPORT_DIR:-$HOME/.openclaw/trash/exports}")"
 REMOTE_NAME="${REMOTE_NAME:-origin}"
 BRANCH="${BRANCH:-master}"
 REPO_SSH_URL="${REPO_SSH_URL:-<repo-ssh-url>}"
@@ -91,20 +89,5 @@ if ! git -C "$BLOG_REPO_PATH" push "$REMOTE_NAME" "$BRANCH" >/dev/null; then
 fi
 
 commit_hash="$(git -C "$BLOG_REPO_PATH" rev-parse --short HEAD)"
-
-# Best-effort cleanup: remove preview artifact from EXPORT_DIR after a successful push.
-# (Move to trash to avoid destructive deletes.)
-export_file="$EXPORT_DIR/$(basename "$post_rel")"
-if [[ -f "$export_file" ]]; then
-  mkdir -p "$TRASH_EXPORT_DIR" >/dev/null 2>&1 || true
-  base="$(basename "$export_file")"
-  dest="$TRASH_EXPORT_DIR/$base"
-  if [[ -e "$dest" ]]; then
-    name="${base%.*}"
-    ext="${base##*.}"
-    dest="$TRASH_EXPORT_DIR/${name}_$(date +%Y%m%d_%H%M%S).$ext"
-  fi
-  mv "$export_file" "$dest" >/dev/null 2>&1 || true
-fi
 
 echo "PUSH_OK|$commit_hash|$REMOTE_NAME|$BRANCH|$post_rel"
